@@ -44,9 +44,9 @@ export class GenericRateLimiter {
     }
 
     public async isQuotaAlreadyExceededDoNotRecordCall(qualifier: string): Promise<boolean> {
-        const timestampsSeconds = this.getTimestampsSeconds();
+        const timestamp = this.getTimestamp();
         const record = await this.persistenceProvider.get(this.configuration.name, qualifier);
-        const recentUsages: number[] = this.selectRecentUsages(record.u, timestampsSeconds.threshold);
+        const recentUsages: number[] = this.selectRecentUsages(record.u, timestamp.threshold);
         return this.isQuotaExceeded(recentUsages.length);
     }
 
@@ -54,11 +54,11 @@ export class GenericRateLimiter {
         input: PersistenceRecord,
         resultHolder: { isQuotaExceeded: boolean },
     ): PersistenceRecord {
-        const timestampsSeconds = this.getTimestampsSeconds();
+        const timestamp = this.getTimestamp();
 
         this.debugFn("Got record with usages " + input.u.length);
 
-        const recentUsages: number[] = this.selectRecentUsages(input.u, timestampsSeconds.threshold);
+        const recentUsages: number[] = this.selectRecentUsages(input.u, timestamp.threshold);
         this.debugFn("Of these usages there are" + recentUsages.length + " usages that count into period");
 
         const result = this.isQuotaExceeded(recentUsages.length);
@@ -66,8 +66,8 @@ export class GenericRateLimiter {
         this.debugFn("The result is quotaExceeded=" + result);
 
         if (!result) {
-            this.debugFn("Quota was not exceeded, so recording a usage at " + timestampsSeconds.current);
-            recentUsages.push(timestampsSeconds.current);
+            this.debugFn("Quota was not exceeded, so recording a usage at " + timestamp.current);
+            recentUsages.push(timestamp.current);
         }
 
         const newRecord: PersistenceRecord = {
@@ -76,26 +76,26 @@ export class GenericRateLimiter {
         return newRecord;
     }
 
-    private selectRecentUsages(allUsages: number[], timestampThresholdSeconds: number): number[] {
-        const recentUsages: number[] = [];
+    private selectRecentUsages(allUsageTimestamps: number[], timestampThreshold: number): number[] {
+        const recentUsageTimestamp: number[] = [];
 
-        for (const usageTime of allUsages) {
-            if (usageTime > timestampThresholdSeconds) {
-                recentUsages.push(usageTime);
+        for (const timestamp of allUsageTimestamps) {
+            if (timestamp > timestampThreshold) {
+                recentUsageTimestamp.push(timestamp);
             }
         }
-        return recentUsages;
+        return recentUsageTimestamp;
     }
 
     private isQuotaExceeded(numOfRecentUsages: number): boolean {
         return numOfRecentUsages >= this.configuration.maxCalls;
     }
 
-    private getTimestampsSeconds(): { current: number; threshold: number } {
-        const currentServerTimestampSeconds: number = this.timestampProvider.getTimestampSeconds();
+    private getTimestamp(): { current: number; threshold: number } {
+        const currentServerTimestamp: number = this.timestampProvider.getTimestamp();
         return {
-            current: currentServerTimestampSeconds,
-            threshold: currentServerTimestampSeconds - this.configuration.periodSeconds,
+            current: currentServerTimestamp,
+            threshold: currentServerTimestamp - this.configuration.periodSeconds * 1000,
         };
     }
 }

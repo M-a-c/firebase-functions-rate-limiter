@@ -71,7 +71,7 @@ describe("GenericRateLimiter", () => {
 
             await genericRateLimiter.isQuotaExceededOrRecordCall(sampleQualifier);
 
-            expect(_.values(persistenceProviderMock.persistenceObject)[0].u).to.contain(sampleTimestamp);
+            expect(_.values(persistenceProviderMock.persistenceObject)[0].u).to.contain(sampleTimestamp * 1000);
         });
 
         it("does not put current timestamp when quota was exceeded", async () => {
@@ -112,7 +112,7 @@ describe("GenericRateLimiter", () => {
 
                 for (let i = 0; i < 6; i++) {
                     timestampProviderMock.setTimestampSeconds(timestamp);
-                    savedTimestamps.push(timestamp);
+                    savedTimestamps.push(timestamp * 1000);
                     await genericRateLimiter.isQuotaExceededOrRecordCall(sampleQualifier);
                     timestamp += periodSeconds / 3 + 0.1; // remember: never push floats to the edges ;)
                 }
