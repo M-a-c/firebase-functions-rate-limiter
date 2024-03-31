@@ -29,8 +29,8 @@
         "semantic-release": "semantic-release"
     },
     "peerDependencies": {
-        "firebase-admin": "^11.3.0",
-        "firebase-functions": "^4.1.0"
+        "firebase-admin": "^12.0.0",
+        "firebase-functions": "^4.8.2"
     },
     "dependencies": {
         "ow": "^0.28.1"
